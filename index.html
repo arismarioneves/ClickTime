@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickTime - Gerenciamento de Tempo e Lucro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+
+        .glass-effect {
+            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .modal-backdrop {
+            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen font-sans">
+    <!-- Header -->
+    <header class="glass-effect shadow-xl">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-800 mb-2">ClickTime</h1>
+                    <p class="text-gray-600">Gerenciamento de Tempo e Lucro</p>
+                </div>
+                <button onclick="openConfigModal()" class="bg-primary hover:bg-secondary text-white p-3 rounded-full shadow-lg hover-lift transition-all duration-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Period Selector -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-white rounded-full p-2 shadow-lg">
+                <button onclick="setPeriod('week', this)" class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300">Esta Semana</button>
+                <button onclick="setPeriod('month', this)" class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 active">Este Mês</button>
+                <button onclick="setPeriod('prev_month', this)" class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300">Mês Anterior</button>
+            </div>
+        </div>
+
+        <!-- Dashboard Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <!-- Hours Card -->
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover-lift transition-all duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">Horas Trabalhadas</h3>
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="text-3xl font-bold text-primary mb-2" id="totalHours">--</div>
+                <p class="text-gray-500 text-sm">no período selecionado</p>
+            </div>
+
+            <!-- Earnings Card -->
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover-lift transition-all duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">Saldo em R$</h3>
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="text-3xl font-bold text-green-600 mb-2" id="totalEarnings">R$ --</div>
+                <p class="text-gray-500 text-sm">baseado no tempo trabalhado</p>
+            </div>
+
+            <!-- Tasks Card -->
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover-lift transition-all duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">Tasks Concluídas</h3>
+                    <div class="p-3 bg-purple-100 rounded-full">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="text-3xl font-bold text-purple-600 mb-2" id="totalTasks">--</div>
+                <p class="text-gray-500 text-sm">no período selecionado</p>
+            </div>
+        </div>
+
+        <!-- Tasks List -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-8 border-b border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <svg class="w-8 h-8 text-primary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    Tasks com Mais Tempo Gasto
+                </h2>
+            </div>
+            <div id="tasksList" class="p-8">
+                <div class="text-center py-12 text-gray-500">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                    </svg>
+                    <p>Carregando dados...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Configuration Modal -->
+    <div id="configModal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 animate-fade-in">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Configurações</h2>
+                    <button onclick="closeConfigModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label for="apiToken" class="block text-sm font-medium text-gray-700 mb-2">Token da API do ClickUp</label>
+                        <input type="password" id="apiToken" placeholder="Insira seu token da API" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    </div>
+
+                    <div>
+                        <label for="hourlyRate" class="block text-sm font-medium text-gray-700 mb-2">Preço por Hora (R$)</label>
+                        <input type="number" id="hourlyRate" placeholder="Ex: 50.00" step="0.01" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    </div>
+
+                    <div id="modalMessage" class="hidden p-4 rounded-lg"></div>
+
+                    <button onclick="saveConfig()" class="w-full card-gradient text-white py-3 px-6 rounded-lg font-medium hover:shadow-lg transition-all duration-300">
+                        Salvar Configurações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPeriod = 'month';
+        let apiToken = '';
+        let hourlyRate = 0;
+
+        // Carregar configurações salvas
+        function loadConfig() {
+            const savedToken = localStorage.getItem('clickup_token');
+            const savedRate = localStorage.getItem('hourly_rate');
+
+            if (savedToken) {
+                document.getElementById('apiToken').value = savedToken;
+                apiToken = savedToken;
+            }
+
+            if (savedRate) {
+                document.getElementById('hourlyRate').value = savedRate;
+                hourlyRate = parseFloat(savedRate);
+            }
+
+            if (savedToken && savedRate) {
+                loadTimeData();
+            } else {
+                openConfigModal();
+            }
+        }
+
+        // Abrir modal de configurações
+        function openConfigModal() {
+            document.getElementById('configModal').classList.remove('hidden');
+            document.getElementById('configModal').classList.add('flex');
+        }
+
+        // Fechar modal de configurações
+        function closeConfigModal() {
+            document.getElementById('configModal').classList.add('hidden');
+            document.getElementById('configModal').classList.remove('flex');
+        }
+
+        // Salvar configurações
+        function saveConfig() {
+            const token = document.getElementById('apiToken').value;
+            const rate = document.getElementById('hourlyRate').value;
+
+            if (!token || !rate) {
+                showModalMessage('Por favor, preencha todos os campos de configuração.', 'error');
+                return;
+            }
+
+            localStorage.setItem('clickup_token', token);
+            localStorage.setItem('hourly_rate', rate);
+
+            apiToken = token;
+            hourlyRate = parseFloat(rate);
+
+            showModalMessage('Configurações salvas com sucesso!', 'success');
+
+            setTimeout(() => {
+                closeConfigModal();
+                loadTimeData();
+            }, 1500);
+        }
+
+        // Definir período
+        function setPeriod(period, targetElement = null) {
+            currentPeriod = period;
+
+            // Atualizar botões ativos
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-primary', 'text-white');
+                btn.classList.add('text-gray-600', 'hover:text-primary');
+            });
+
+            // Se não foi passado um elemento, encontrar pelo período
+            if (!targetElement) {
+                const periodMap = {
+                    'week': 'Esta Semana',
+                    'month': 'Este Mês',
+                    'prev_month': 'Mês Anterior'
+                };
+                targetElement = Array.from(document.querySelectorAll('.period-btn')).find(btn =>
+                    btn.textContent.trim() === periodMap[period]
+                );
+            }
+
+            if (targetElement) {
+                targetElement.classList.add('active', 'bg-primary', 'text-white');
+                targetElement.classList.remove('text-gray-600', 'hover:text-primary');
+            }
+
+            if (apiToken) {
+                loadTimeData();
+            }
+        }
+
+        // Carregar dados de tempo
+        async function loadTimeData() {
+            if (!apiToken) {
+                showMessage('Configure seu token da API primeiro.', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const timeData = await fetchTimeData();
+                updateDashboard(timeData);
+                updateTasksList(timeData.tasks);
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                showMessage('Erro ao carregar dados do ClickUp. Verifique seu token.', 'error');
+            }
+        }
+
+        // Buscar dados da API do ClickUp
+        async function fetchTimeData() {
+            const { startDate, endDate } = getPeriodDates();
+
+            // Fazer requisição para o arquivo PHP que irá buscar os dados
+            const response = await fetch('api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    token: apiToken,
+                    start_date: startDate,
+                    end_date: endDate
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro na requisição');
+            }
+
+            return await response.json();
+        }
+
+        // Obter datas do período selecionado
+        function getPeriodDates() {
+            const now = new Date();
+            let startDate, endDate;
+
+            if (currentPeriod === 'week') {
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - now.getDay());
+                startOfWeek.setHours(0, 0, 0, 0);
+
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                endOfWeek.setHours(23, 59, 59, 999);
+
+                startDate = startOfWeek.getTime();
+                endDate = endOfWeek.getTime();
+            } else if (currentPeriod === 'month') {
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                endOfMonth.setHours(23, 59, 59, 999);
+
+                startDate = startOfMonth.getTime();
+                endDate = endOfMonth.getTime();
+            } else if (currentPeriod === 'prev_month') {
+                const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                endOfPrevMonth.setHours(23, 59, 59, 999);
+
+                startDate = startOfPrevMonth.getTime();
+                endDate = endOfPrevMonth.getTime();
+            }
+
+            return { startDate, endDate };
+        }
+
+        // Atualizar dashboard
+        function updateDashboard(data) {
+            const totalHours = (data.total_time / 3600000).toFixed(1); // Converter de ms para horas
+            const totalEarnings = (totalHours * hourlyRate).toFixed(2);
+
+            document.getElementById('totalHours').textContent = totalHours + 'h';
+            document.getElementById('totalEarnings').textContent = 'R$ ' + totalEarnings;
+            document.getElementById('totalTasks').textContent = data.tasks.length;
+        }
+
+        // Atualizar lista de tasks
+        function updateTasksList(tasks) {
+            const tasksList = document.getElementById('tasksList');
+
+            if (tasks.length === 0) {
+                tasksList.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p>Nenhuma task encontrada no período selecionado.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Ordenar tasks por tempo gasto (decrescente)
+            tasks.sort((a, b) => b.time - a.time);
+
+            const tasksHtml = tasks.slice(0, 10).map((task, index) => {
+                const hours = (task.time / 3600000).toFixed(1);
+                return `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-3 hover:bg-gray-100 transition-colors">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
+                                ${index + 1}
+                            </div>
+                            <span class="font-medium text-gray-800">${task.name}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-primary font-bold text-lg">${hours}h</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            tasksList.innerHTML = tasksHtml;
+        }
+
+        // Mostrar loading
+        function showLoading() {
+            document.getElementById('tasksList').innerHTML = `
+                <div class="text-center py-12 text-gray-500">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-300 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                    </svg>
+                    <p>Carregando dados...</p>
+                </div>
+            `;
+            document.getElementById('totalHours').textContent = '--';
+            document.getElementById('totalEarnings').textContent = 'R$ --';
+            document.getElementById('totalTasks').textContent = '--';
+        }
+
+        // Mostrar mensagem no modal
+        function showModalMessage(message, type) {
+            const messageDiv = document.getElementById('modalMessage');
+            messageDiv.className = `p-4 rounded-lg ${type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+            messageDiv.textContent = message;
+            messageDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Inicializar aplicação
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfig();
+            // Marcar o botão do mês atual como selecionado e carregar dados
+            setTimeout(() => {
+                setPeriod('month');
+            }, 100);
+        });</script>
+</body>
+</html>
