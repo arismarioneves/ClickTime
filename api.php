@@ -79,7 +79,8 @@ try {
                         $allTasks[] = [
                             'id' => $taskId,
                             'name' => $taskName,
-                            'time' => $duration
+                            'time' => $duration,
+                            'date' => isset($entry['start']) ? gmdate('Y-m-d', intval($entry['start'] / 1000)) : date('Y-m-d')
                         ];
                     }
                 }

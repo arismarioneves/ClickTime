@@ -25,6 +25,7 @@ Um sistema web para gerenciar tempo e calcular lucro mensal baseado no tempo gas
    ClickTime/
    ├── index.html
    ├── api.php
+   | ...
    └── README.md
    ```
 
@@ -86,4 +87,4 @@ Sugestões e melhorias são bem-vindas! Sinta-se à vontade para:
 
 ---
 
-**Desenvolvido com ❤️ para otimizar seu controle de tempo e produtividade!**
+**Otimize seu controle de tempo e produtividade!**

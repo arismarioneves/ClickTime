@@ -88,11 +88,14 @@
         <div class="flex justify-center mb-8">
             <div class="bg-white rounded-full p-2 shadow-lg">
                 <button onclick="setPeriod('week', this)"
-                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 text-gray-600 hover:text-primary">Esta Semana</button>
+                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 text-gray-600 hover:text-primary">Esta
+                    Semana</button>
                 <button onclick="setPeriod('month', this)"
-                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 active bg-primary text-white">Este Mês</button>
+                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 active bg-primary text-white">Este
+                    Mês</button>
                 <button onclick="setPeriod('prev_month', this)"
-                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 text-gray-600 hover:text-primary">Mês Anterior</button>
+                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 text-gray-600 hover:text-primary">Mês
+                    Anterior</button>
             </div>
         </div>
 
@@ -149,14 +152,33 @@
         <!-- Tasks List -->
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="p-8 border-b border-gray-100">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                    <svg class="w-8 h-8 text-primary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                        </path>
-                    </svg>
-                    Tasks com Mais Tempo Gasto
-                </h2>
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                        <svg class="w-8 h-8 text-primary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                            </path>
+                        </svg>
+                        Tasks Realizadas
+                    </h2>
+                    <div class="flex items-center space-x-3">
+                        <label class="text-sm font-medium text-gray-600">Ordenar por:</label>
+                        <div class="relative">
+                            <select id="sortOption" onchange="changeSortOption()"
+                                class="appearance-none bg-white px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm font-medium text-gray-700 cursor-pointer hover:border-primary">
+                                <option value="time">⏱️ Tempo Gasto</option>
+                                <option value="date">📅 Data</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div id="tasksList" class="p-8">
                 <div class="text-center py-12 text-gray-500">
@@ -439,8 +461,20 @@
             document.getElementById('totalTasks').textContent = data.tasks.length;
         }
 
+        // Variável global para armazenar as tasks atuais
+        let currentTasks = [];
+        let currentSortOption = 'time';
+
+        // Função para alterar opção de ordenação
+        function changeSortOption() {
+            const sortOption = document.getElementById('sortOption').value;
+            currentSortOption = sortOption;
+            updateTasksList(currentTasks);
+        }
+
         // Atualizar lista de tasks
         function updateTasksList(tasks) {
+            currentTasks = tasks; // Armazenar tasks para reordenação
             const tasksList = document.getElementById('tasksList');
 
             if (tasks.length === 0) {
@@ -455,18 +489,29 @@
                 return;
             }
 
-            // Ordenar tasks por tempo gasto (decrescente)
-            tasks.sort((a, b) => b.time - a.time);
+            // Ordenar tasks baseado na opção selecionada
+            let sortedTasks = [...tasks];
+            if (currentSortOption === 'time') {
+                sortedTasks.sort((a, b) => b.time - a.time);
+            } else if (currentSortOption === 'date') {
+                sortedTasks.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+            }
 
-            const tasksHtml = tasks.slice(0, 10).map((task, index) => {
+            // Mostrar todas as tasks (não apenas as top 10)
+            const tasksHtml = sortedTasks.map((task, index) => {
                 const formattedTime = formatTime(task.time);
+                const taskDate = task.date ? task.date.split('-').reverse().join('/') : 'Data não disponível';
+
                 return `
                     <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-3 hover:bg-gray-100 transition-colors">
-                        <div class="flex items-center">
+                        <div class="flex items-center flex-1">
                             <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                                 ${index + 1}
                             </div>
-                            <span class="font-medium text-gray-800">${task.name}</span>
+                            <div class="flex-1">
+                                <span class="font-medium text-gray-800 block">${task.name}</span>
+                                <span class="text-sm text-gray-500">${taskDate}</span>
+                            </div>
                         </div>
                         <div class="flex items-center">
                             <span class="text-primary font-bold text-lg">${formattedTime}</span>
