@@ -88,14 +88,11 @@
         <div class="flex justify-center mb-8">
             <div class="bg-white rounded-full p-2 shadow-lg">
                 <button onclick="setPeriod('week', this)"
-                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300">Esta
-                    Semana</button>
+                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 text-gray-600 hover:text-primary">Esta Semana</button>
                 <button onclick="setPeriod('month', this)"
-                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 active">Este
-                    Mês</button>
+                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 active bg-primary text-white">Este Mês</button>
                 <button onclick="setPeriod('prev_month', this)"
-                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300">Mês
-                    Anterior</button>
+                    class="period-btn px-6 py-3 rounded-full font-medium transition-all duration-300 text-gray-600 hover:text-primary">Mês Anterior</button>
             </div>
         </div>
 
@@ -312,9 +309,10 @@
                     'month': 'Este Mês',
                     'prev_month': 'Mês Anterior'
                 };
-                targetElement = Array.from(document.querySelectorAll('.period-btn')).find(btn =>
-                    btn.textContent.trim() === periodMap[period]
-                );
+                targetElement = Array.from(document.querySelectorAll('.period-btn')).find(btn => {
+                    const btnText = btn.textContent.replace(/\s+/g, ' ').trim();
+                    return btnText === periodMap[period];
+                });
             }
 
             if (targetElement) {
