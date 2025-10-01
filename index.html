@@ -177,6 +177,15 @@
                                 </svg>
                             </div>
                         </div>
+                        <button onclick="generateReport()"
+                            class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-all text-sm font-medium shadow-sm hover:shadow-md">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
+                            <span>Gerar Relatório</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -246,6 +255,41 @@
                         class="w-full card-gradient text-white py-3 px-6 rounded-lg font-medium hover:shadow-lg transition-all duration-300">
                         Salvar Configurações
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full mx-4 animate-fade-in max-h-[90vh] overflow-hidden">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Relatório de Atividades</h2>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="copyReportTable()"
+                            class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-all text-sm font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            <span>Copiar Tabela</span>
+                        </button>
+                        <button onclick="closeReportModal()"
+                            class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-auto max-h-[70vh]">
+                    <div id="reportTableContainer" class="bg-gray-50 p-4 rounded-lg">
+                        <!-- Tabela será inserida aqui -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -537,6 +581,112 @@
             document.getElementById('totalHours').textContent = '--';
             document.getElementById('totalEarnings').textContent = 'R$ --';
             document.getElementById('totalTasks').textContent = '--';
+        }
+
+        // Gerar relatório em formato de tabela no modal
+        function generateReport() {
+            if (!currentTasks || currentTasks.length === 0) {
+                alert('Nenhuma task disponível para gerar relatório.');
+                return;
+            }
+
+            // Ordenar tasks por data
+            const sortedTasks = [...currentTasks].sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+
+            // Agrupar tasks duplicadas e marcar status
+            const taskGroups = {};
+            sortedTasks.forEach(task => {
+                if (!taskGroups[task.name]) {
+                    taskGroups[task.name] = [];
+                }
+                taskGroups[task.name].push(task);
+            });
+
+            // Criar lista final com status correto
+            const finalTasks = [];
+            Object.values(taskGroups).forEach(group => {
+                group.forEach((task, index) => {
+                    const isLast = index === group.length - 1;
+                    finalTasks.push({
+                        ...task,
+                        status: isLast ? 'Concluído' : 'Em andamento'
+                    });
+                });
+            });
+
+            // Ordenar novamente por data
+            finalTasks.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+
+            // Gerar HTML da tabela
+            let tableHtml = `
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Projeto / Módulo</th>
+                            <th>Descrição da Atividade</th>
+                            <th>Horas Alocadas</th>
+                            <th>Status</th>
+                            <th>Observações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            finalTasks.forEach(task => {
+                const taskDate = task.date ? task.date.split('-').reverse().join('/').substring(0, 5) : '--/--';
+                const formattedTime = formatTime(task.time);
+
+                tableHtml += `
+                    <tr>
+                        <td>${taskDate}</td>
+                        <td> - </td>
+                        <td>${task.name}</td>
+                        <td>${formattedTime}</td>
+                        <td>${task.status}</td>
+                        <td></td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+
+            // Inserir tabela no modal e abrir
+            document.getElementById('reportTableContainer').innerHTML = tableHtml;
+            document.getElementById('reportModal').classList.remove('hidden');
+            document.getElementById('reportModal').classList.add('flex');
+        }
+
+        // Fechar modal do relatório
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+            document.getElementById('reportModal').classList.remove('flex');
+        }
+
+        // Copiar tabela para clipboard
+        function copyReportTable() {
+            const table = document.querySelector('#reportTableContainer table');
+            if (!table) return;
+
+            // Criar range de seleção
+            const range = document.createRange();
+            range.selectNode(table);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+
+            try {
+                // Copiar para clipboard
+                document.execCommand('copy');
+                alert('Tabela copiada!');
+            } catch (err) {
+                alert('Erro ao copiar tabela. Tente selecionar manualmente.');
+            }
+
+            // Limpar seleção
+            window.getSelection().removeAllRanges();
         }
 
         // Mostrar mensagem no modal
