@@ -1,5 +1,7 @@
 # ClickTime - Gerenciamento de Tempo e Lucro
 
+> ℹ️ **Nota sobre o Fork**: Este é um fork do projeto original criado por [arismarioneves](https://github.com/arismarioneves/ClickTime). Mantido neste repositório para fins de estudo, customização pessoal e backup.
+
 Um sistema web para gerenciar tempo e calcular lucro mensal baseado no tempo gasto nas tasks do ClickUp.
 
 ## 🚀 Funcionalidades
@@ -10,17 +12,54 @@ Um sistema web para gerenciar tempo e calcular lucro mensal baseado no tempo gas
 - **Configuração Simples**: Apenas token da API e preço por hora
 - **Top Tasks**: Veja quais tasks você gastou mais tempo
 - **Armazenamento Local**: Suas configurações ficam salvas no navegador
+- **Docker Ready**: Executável com Docker Compose
 
-## 📋 Pré-requisitos
+## � Início Rápido com Docker
+
+### Pré-requisitos
+
+- Docker instalado
+- Docker Compose instalado
+
+### Executar o projeto
+
+```bash
+# Build da imagem
+docker-compose build
+
+# Iniciar o container
+docker-compose up -d
+```
+
+Acesse a aplicação em: http://localhost:8080
+
+### Parar o container
+
+```bash
+docker-compose down
+```
+
+### Ver logs
+
+```bash
+docker-compose logs -f clicktime-app
+```
+
+---
+
+## �📋 Instalação Manual
+
+### Pré-requisitos
 
 - Servidor web com PHP (Apache, Nginx, etc.)
-- PHP 7.0 ou superior
+- PHP 8.0 ou superior
 - Extensão cURL habilitada no PHP
 - Token da API do ClickUp
 
-## 🛠️ Instalação
+### Passos
 
 1. **Clone ou baixe os arquivos** para seu servidor web:
+
    ```
    ClickTime/
    ├── index.html
@@ -48,6 +87,7 @@ Um sistema web para gerenciar tempo e calcular lucro mensal baseado no tempo gas
 3. **Visualize seus dados**:
    - Por padrão, o sistema mostra dados do mês atual
    - Use os botões para alternar entre "Esta Semana" e "Este Mês"
+   - Os dados agora são listados **dia a dia**
    - Veja suas horas trabalhadas, ganhos e top tasks
 
 ## 🔒 Segurança
@@ -59,15 +99,18 @@ Um sistema web para gerenciar tempo e calcular lucro mensal baseado no tempo gas
 ## 🐛 Solução de Problemas
 
 ### "Erro ao carregar dados do ClickUp"
+
 - Verifique se seu token da API está correto
 - Confirme se você tem permissões nas tasks/projetos
 - Verifique se a extensão cURL está habilitada no PHP
 
 ### "Método não permitido"
+
 - Certifique-se de que o servidor está configurado para executar PHP
 - Verifique se o arquivo api.php está acessível
 
 ### Dados não aparecem
+
 - Confirme se você tem time entries registrados no período selecionado
 - Verifique se as tasks estão atribuídas a você no ClickUp
 
@@ -81,6 +124,7 @@ Um sistema web para gerenciar tempo e calcular lucro mensal baseado no tempo gas
 ## 🤝 Contribuições
 
 Sugestões e melhorias são bem-vindas! Sinta-se à vontade para:
+
 - Reportar bugs
 - Sugerir novas funcionalidades
 - Contribuir com código
