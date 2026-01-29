@@ -210,6 +210,19 @@
                     <p>Carregando dados...</p>
                 </div>
             </div>
+            <div class="px-8 pb-8 border-t border-gray-100 bg-gray-50">
+                <details id="rawEntriesDetails"
+                    class="bg-gray-900 text-gray-200 rounded-xl overflow-hidden shadow-inner">
+                    <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold tracking-wide flex items-center justify-between">
+                        <span>Dados brutos do ClickUp</span>
+                        <span class="text-xs text-gray-400 ml-3">JSON original</span>
+                    </summary>
+                    <pre id="rawEntriesPre"
+                        class="whitespace-pre-wrap text-xs overflow-x-auto bg-gray-900 text-green-200 px-4 py-3">
+Carregando dados brutos...
+                    </pre>
+                </details>
+            </div>
         </div>
     </main>
 
@@ -413,10 +426,20 @@
             try {
                 const timeData = await fetchTimeData();
                 updateDashboard(timeData);
-                updateTasksList(timeData.tasks);
+                currentRawEntries = Array.isArray(timeData.raw_entries) ? timeData.raw_entries : [];
+                updateRawEntriesDisplay(currentRawEntries);
+                // Converter tasks_by_date para array plano
+                const tasksArray = [];
+                if (timeData.tasks_by_date) {
+                    Object.values(timeData.tasks_by_date).forEach(dayTasks => {
+                        tasksArray.push(...dayTasks);
+                    });
+                }
+                updateTasksList(tasksArray, timeData.tasks_by_date);
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
                 showMessage('Erro ao carregar dados do ClickUp. Verifique seu token.', 'error');
+                updateRawEntriesDisplay([]);
             }
         }
 
@@ -510,25 +533,36 @@
             const totalHours = data.total_time / 3600000; // Para cálculo do valor em R$
             const totalEarnings = totalHours * hourlyRate;
 
+            // Contar total de tasks
+            let totalTasksCount = 0;
+            if (data.tasks_by_date) {
+                Object.values(data.tasks_by_date).forEach(dayTasks => {
+                    totalTasksCount += dayTasks.length;
+                });
+            }
+
             document.getElementById('totalHours').textContent = formattedTime;
             document.getElementById('totalEarnings').textContent = formatCurrency(totalEarnings);
-            document.getElementById('totalTasks').textContent = data.tasks.length;
+            document.getElementById('totalTasks').textContent = totalTasksCount;
         }
 
         // Variável global para armazenar as tasks atuais
-        let currentTasks = [];
-        let currentSortOption = 'time';
+    let currentTasks = [];
+    let currentTasksByDate = {};
+    let currentRawEntries = [];
+        let currentSortOption = 'date';
 
         // Função para alterar opção de ordenação
         function changeSortOption() {
             const sortOption = document.getElementById('sortOption').value;
             currentSortOption = sortOption;
-            updateTasksList(currentTasks);
+            updateTasksList(currentTasks, currentTasksByDate);
         }
 
         // Atualizar lista de tasks
-        function updateTasksList(tasks) {
+        function updateTasksList(tasks, tasksByDate = null) {
             currentTasks = tasks; // Armazenar tasks para reordenação
+            currentTasksByDate = tasksByDate || {};
             const tasksList = document.getElementById('tasksList');
 
             if (tasks.length === 0) {
@@ -543,38 +577,101 @@
                 return;
             }
 
-            // Ordenar tasks baseado na opção selecionada
-            let sortedTasks = [...tasks];
-            if (currentSortOption === 'time') {
-                sortedTasks.sort((a, b) => b.time - a.time);
-            } else if (currentSortOption === 'date') {
-                sortedTasks.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+            let tasksHtml = '';
+
+            // Se ordenando por data, agrupar por data
+            if (currentSortOption === 'date' && Object.keys(currentTasksByDate).length > 0) {
+                const dates = Object.keys(currentTasksByDate).sort();
+
+                dates.forEach(date => {
+                    const dayTasks = currentTasksByDate[date];
+                    const formattedDate = date.split('-').reverse().join('/');
+
+                    // Data como header
+                    tasksHtml += `
+                        <div class="my-6">
+                            <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v2h16V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 8h16v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" clip-rule="evenodd"></path>
+                                </svg>
+                                ${formattedDate}
+                            </h3>
+                    `;
+
+                    dayTasks.forEach((task, index) => {
+                        const formattedTime = formatTime(task.time);
+                        const startTime = task.time_start || 'Horário não disponível';
+
+                        tasksHtml += `
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-3 hover:bg-gray-100 transition-colors ml-4">
+                                <div class="flex items-center flex-1">
+                                    <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
+                                        ${index + 1}
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="font-medium text-gray-800 block">${task.name}</span>
+                                        <span class="text-sm text-gray-500">⏰ ${startTime}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-primary font-bold text-lg">${formattedTime}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    tasksHtml += `</div>`;
+                });
+            } else {
+                // Se ordenando por tempo, mostrar em ordem decrescente
+                let sortedTasks = [...tasks];
+                if (currentSortOption === 'time') {
+                    sortedTasks.sort((a, b) => b.time - a.time);
+                } else {
+                    sortedTasks.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+                }
+
+                tasksHtml = sortedTasks.map((task, index) => {
+                    const formattedTime = formatTime(task.time);
+                    const taskDate = task.date ? task.date.split('-').reverse().join('/') : 'Data não disponível';
+                    const startTime = task.time_start || 'Horário não disponível';
+
+                    return `
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-3 hover:bg-gray-100 transition-colors">
+                            <div class="flex items-center flex-1">
+                                <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
+                                    ${index + 1}
+                                </div>
+                                <div class="flex-1">
+                                    <span class="font-medium text-gray-800 block">${task.name}</span>
+                                    <span class="text-sm text-gray-500">${taskDate} - ⏰ ${startTime}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-primary font-bold text-lg">${formattedTime}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
 
-            // Mostrar todas as tasks (não apenas as top 10)
-            const tasksHtml = sortedTasks.map((task, index) => {
-                const formattedTime = formatTime(task.time);
-                const taskDate = task.date ? task.date.split('-').reverse().join('/') : 'Data não disponível';
-
-                return `
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-3 hover:bg-gray-100 transition-colors">
-                        <div class="flex items-center flex-1">
-                            <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
-                                ${index + 1}
-                            </div>
-                            <div class="flex-1">
-                                <span class="font-medium text-gray-800 block">${task.name}</span>
-                                <span class="text-sm text-gray-500">${taskDate}</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-primary font-bold text-lg">${formattedTime}</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
             tasksList.innerHTML = tasksHtml;
+        }
+
+        function updateRawEntriesDisplay(entries) {
+            const rawPre = document.getElementById('rawEntriesPre');
+            const rawDetails = document.getElementById('rawEntriesDetails');
+            if (!rawPre || !rawDetails) {
+                return;
+            }
+
+            if (!entries || entries.length === 0) {
+                rawPre.textContent = 'Nenhuma entrada retornada pelo ClickUp para o período selecionado.';
+                rawDetails.open = false;
+                return;
+            }
+
+            rawPre.textContent = JSON.stringify(entries, null, 2);
         }
 
         // Mostrar loading
@@ -591,6 +688,14 @@
             document.getElementById('totalHours').textContent = '--';
             document.getElementById('totalEarnings').textContent = 'R$ --';
             document.getElementById('totalTasks').textContent = '--';
+            const rawPre = document.getElementById('rawEntriesPre');
+            if (rawPre) {
+                rawPre.textContent = 'Carregando dados brutos...';
+            }
+            const rawDetails = document.getElementById('rawEntriesDetails');
+            if (rawDetails) {
+                rawDetails.open = false;
+            }
         }
 
         // Gerar relatório em formato de tabela no modal
@@ -629,11 +734,41 @@
 
             // Gerar HTML da tabela
             let tableHtml = `
-                <table border="1">
+                <style>
+                    #reportTableContainer table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        table-layout: fixed;
+                    }
+                    #reportTableContainer th,
+                    #reportTableContainer td {
+                        padding: 8px 10px;
+                        border: 1px solid #e5e7eb;
+                        font-size: 14px;
+                        vertical-align: top;
+                    }
+                    #reportTableContainer th {
+                        background: #f3f4f6;
+                        font-weight: 600;
+                        text-align: left;
+                    }
+                    #reportTableContainer td.observation-cell {
+                        width: 28%;
+                        word-break: break-word;
+                        white-space: pre-wrap;
+                    }
+                </style>
+                <table>
+                    <colgroup>
+                        <col style="width: 10%">
+                        <col style="width: 34%">
+                        <col style="width: 14%">
+                        <col style="width: 14%">
+                        <col style="width: 28%">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>Data</th>
-                            <th>Projeto / Módulo</th>
                             <th>Descrição da Atividade</th>
                             <th>Horas Alocadas</th>
                             <th>Status</th>
@@ -646,15 +781,15 @@
             finalTasks.forEach(task => {
                 const taskDate = task.date ? task.date.split('-').reverse().join('/').substring(0, 5) : '--/--';
                 const formattedTime = formatTime(task.time);
+                const observation = task.description ? task.description : '';
 
                 tableHtml += `
                     <tr>
                         <td>${taskDate}</td>
-                        <td> - </td>
                         <td>${task.name}</td>
                         <td>${formattedTime}</td>
                         <td>${task.status}</td>
-                        <td></td>
+                        <td class="observation-cell">${observation}</td>
                     </tr>
                 `;
             });
