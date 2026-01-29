@@ -23,6 +23,7 @@ if (!$input || !isset($input['token']) || !isset($input['start_date']) || !isset
 $token = $input['token'];
 $startDate = $input['start_date'];
 $endDate = $input['end_date'];
+$timezone = new DateTimeZone('America/Sao_Paulo');
 
 try {
     // Buscar dados do usuário para obter os teams
@@ -41,8 +42,9 @@ try {
         throw new Exception('Erro ao obter teams do usuário');
     }
 
-    $allTasks = [];
     $totalTime = 0;
+    $processedEntries = []; // Controle de entradas já processadas pelo ID
+    $uniqueEntries = []; // Entradas únicas antes da agregação
 
     // Para cada team, buscar os dados de tempo
     foreach ($teamsData['teams'] as $team) {
@@ -56,48 +58,108 @@ try {
 
         if ($timeEntries && isset($timeEntries['data'])) {
             foreach ($timeEntries['data'] as $entry) {
-                $duration = intval($entry['duration']);
-                $totalTime += $duration;
-
-                // Obter informações da task
-                if (isset($entry['task'])) {
-                    $taskId = $entry['task']['id'];
-                    $taskName = $entry['task']['name'];
-
-                    // Verificar se a task já existe no array
-                    $taskExists = false;
-                    foreach ($allTasks as &$task) {
-                        if ($task['id'] === $taskId) {
-                            $task['time'] += $duration;
-                            $taskExists = true;
-                            break;
-                        }
-                    }
-
-                    // Se a task não existe, adicionar
-                    if (!$taskExists) {
-                        $allTasks[] = [
-                            'id' => $taskId,
-                            'name' => $taskName,
-                            'time' => $duration,
-                            'date' => isset($entry['start']) ? gmdate('Y-m-d', intval($entry['start'] / 1000)) : date('Y-m-d')
-                        ];
-                    }
+                $entryId = $entry['id'] ?? null;
+                if (!$entryId || isset($processedEntries[$entryId])) {
+                    continue;
                 }
+
+                // Guardar a entrada única e marcar como processada
+                $processedEntries[$entryId] = true;
+                $uniqueEntries[] = $entry;
             }
         }
     }
+
+    // Agregar entradas únicas por task + data
+    $allTasks = [];
+    foreach ($uniqueEntries as $entry) {
+        $duration = intval($entry['duration']);
+        $totalTime += $duration;
+
+        $hasTask = isset($entry['task']);
+        $entryId = $entry['id'] ?? uniqid('entry_');
+        $taskId = $hasTask ? $entry['task']['id'] : 'manual_' . $entryId;
+        $rawName = $hasTask ? $entry['task']['name'] : ($entry['description'] ?? 'Nenhuma tarefa selecionada');
+        $taskName = trim($rawName) !== '' ? $rawName : 'Nenhuma tarefa selecionada';
+
+        $startMillis = isset($entry['start']) ? intval($entry['start']) : null;
+        $entryTimestamp = null;
+        $entryDate = date('Y-m-d');
+        $entryTime = '--:--:--';
+
+        if ($startMillis !== null) {
+            $timestampSeconds = intdiv($startMillis, 1000);
+            $dateTime = (new DateTimeImmutable('@' . $timestampSeconds))->setTimezone($timezone);
+            $entryTimestamp = $dateTime->getTimestamp();
+            $entryDate = $dateTime->format('Y-m-d');
+            $entryTime = $dateTime->format('H:i:s');
+        }
+
+        $uniqueKey = $entryDate . '_' . $taskId;
+
+        if (!isset($allTasks[$uniqueKey])) {
+            $allTasks[$uniqueKey] = [
+                'id' => $taskId,
+                'name' => $taskName,
+                'time' => 0,
+                'date' => $entryDate,
+                'time_start' => $entryTime,
+                'timestamp' => $entryTimestamp,
+                'unique_key' => $uniqueKey,
+                'has_task' => $hasTask,
+                'description' => $entry['description'] ?? null,
+                'raw_entry_ids' => []
+            ];
+        }
+
+        $allTasks[$uniqueKey]['time'] += $duration;
+        $allTasks[$uniqueKey]['raw_entry_ids'][] = $entryId;
+
+        // Atualizar para o horário mais antigo
+        if ($entryTimestamp !== null && ($allTasks[$uniqueKey]['timestamp'] === 0 || $entryTimestamp < $allTasks[$uniqueKey]['timestamp'])) {
+            $allTasks[$uniqueKey]['timestamp'] = $entryTimestamp;
+            $allTasks[$uniqueKey]['time_start'] = $entryTime;
+        }
+    }
+
+    // Reindexar array para ordenação
+    $allTasks = array_values($allTasks);
+
+    // Ordenar tarefas por data e depois por horário
+    usort($allTasks, function($a, $b) {
+        if ($a['date'] !== $b['date']) {
+            return strcmp($a['date'], $b['date']);
+        }
+        return $a['timestamp'] - $b['timestamp'];
+    });
+
+    // Agrupar tarefas por data
+    $tasksByDate = [];
+    foreach ($allTasks as $task) {
+        $date = $task['date'];
+        if (!isset($tasksByDate[$date])) {
+            $tasksByDate[$date] = [];
+        }
+        
+        unset($task['unique_key']);
+        unset($task['timestamp']);
+        $tasksByDate[$date][] = $task;
+    }
+
+    // Converter para array associativo mantendo a ordem
+    $tasksByDate = (object)$tasksByDate;
 
     // Retornar dados processados
     echo json_encode([
         'success' => true,
         'total_time' => $totalTime,
-        'tasks' => $allTasks,
+        'tasks_by_date' => $tasksByDate,
+        'raw_entries' => $uniqueEntries,
         'period' => [
             'start' => $startDate,
             'end' => $endDate
         ]
-    ]);
+    ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
