@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  clicktime-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clicktime-php-app
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - PHP_MEMORY_LIMIT=256M
+    networks:
+      - clicktime-network
+    restart: unless-stopped
+
+networks:
+  clicktime-network:
+    driver: bridge
