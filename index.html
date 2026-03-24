@@ -820,7 +820,7 @@
                             <th>Atividade</th>
                             <th>Horas</th>
                             <th>Status</th>
-                            <th>Observações</th>
+                            <th>Observação</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -879,8 +879,7 @@
                     const status = idx === group.length - 1 ? 'Concluído' : 'Em andamento';
                     const date   = task.date ? task.date.split('-').reverse().join('/').substring(0, 5) : '--/--';
                     const hours  = formatTime(task.time);
-                    const value  = formatCurrency((task.time / 3600000) * hourlyRate);
-                    rows.push([date, task.name, hours, value, status]);
+                    rows.push([date, ' - ', task.name, hours, status, '']);
                 });
             });
             rows.sort((a, b) => {
@@ -889,7 +888,7 @@
                 return ma !== mb ? ma - mb : da - db;
             });
 
-            const header = ['Data', 'Atividade', 'Horas', 'Valor (R$)', 'Status'];
+            const header = ['Data', 'Projeto', 'Atividade', 'Horas', 'Status', 'Observação'];
             const csvContent = '\uFEFF' + [header, ...rows]
                 .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
                 .join('\r\n');
