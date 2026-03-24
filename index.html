@@ -408,10 +408,38 @@
 
         function showMessage(message, type) { showToast(message, type); }
 
+        // Update user profile in header
+        function updateUserProfile(user) {
+            if (!user) return;
+            const avatarEl   = document.getElementById('userAvatar');
+            const nameEl     = document.getElementById('userName');
+            const wsEl       = document.getElementById('userWorkspace');
+            const infoEl     = document.getElementById('userInfo');
+
+            nameEl.textContent = user.name || '--';
+            wsEl.textContent   = '🏢 ' + (user.workspace || '--');
+            infoEl.classList.remove('hidden');
+
+            if (user.avatar) {
+                avatarEl.innerHTML = `<img src="${user.avatar}" class="w-full h-full rounded-full object-cover" onerror="this.parentElement.textContent='${getInitials(user.name)}'">`;
+            } else {
+                avatarEl.textContent = getInitials(user.name);
+            }
+        }
+
+        function getInitials(name) {
+            if (!name) return '--';
+            return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+        }
+
         // Carregar configurações salvas
         function loadConfig() {
             const savedToken = localStorage.getItem('clickup_token');
             const savedRate = localStorage.getItem('hourly_rate');
+            const savedUser = localStorage.getItem('clickup_user');
+            if (savedUser) {
+                try { updateUserProfile(JSON.parse(savedUser)); } catch(e) {}
+            }
 
             if (savedToken) {
                 document.getElementById('apiToken').value = savedToken;
@@ -604,6 +632,11 @@
 
         // Atualizar dashboard
         function updateDashboard(data) {
+            if (data.user) {
+                localStorage.setItem('clickup_user', JSON.stringify(data.user));
+                updateUserProfile(data.user);
+            }
+
             const formattedTime = formatTime(data.total_time);
             const totalHours = data.total_time / 3600000; // Para cálculo do valor em R$
             const totalEarnings = totalHours * hourlyRate;
