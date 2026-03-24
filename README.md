@@ -4,12 +4,15 @@ Um sistema web para gerenciar tempo e calcular lucro mensal baseado no tempo gas
 
 ## 🚀 Funcionalidades
 
-- **Dashboard Intuitivo**: Visualize suas horas trabalhadas e ganhos em tempo real
+- **Dashboard Intuitivo**: Visualize horas trabalhadas, ganhos e total de tasks em tempo real
 - **Integração ClickUp**: Conecta diretamente com a API do ClickUp para buscar dados de tempo
-- **Períodos Flexíveis**: Visualize dados por semana ou mês
-- **Configuração Simples**: Apenas token da API e preço por hora
-- **Top Tasks**: Veja quais tasks você gastou mais tempo
-- **Armazenamento Local**: Suas configurações ficam salvas no navegador
+- **Perfil do Usuário**: Exibe nome, foto e workspace diretamente do ClickUp
+- **Períodos Flexíveis**: Semana atual, mês atual, mês anterior ou período personalizado
+- **Relatório Detalhado**: Tabela com Data, Projeto, Atividade, Horas, Status e Observação
+- **Exportar CSV**: Exporta o relatório para CSV compatível com Excel
+- **Copiar Tabela**: Copia o relatório formatado para colar em planilhas
+- **Barra de Progresso**: Visualize o peso relativo de cada task no período
+- **Armazenamento Local**: Configurações e perfil salvos no navegador
 
 ## 📋 Pré-requisitos
 
@@ -25,7 +28,8 @@ Um sistema web para gerenciar tempo e calcular lucro mensal baseado no tempo gas
    ClickTime/
    ├── index.html
    ├── api.php
-   | ...
+   ├── favicon.ico
+   ├── logo.png
    └── README.md
    ```
 
@@ -46,15 +50,19 @@ Um sistema web para gerenciar tempo e calcular lucro mensal baseado no tempo gas
    - Clique em "Salvar Configurações"
 
 3. **Visualize seus dados**:
-   - Por padrão, o sistema mostra dados do mês atual
-   - Use os botões para alternar entre "Esta Semana" e "Este Mês"
-   - Veja suas horas trabalhadas, ganhos e top tasks
+   - Por padrão exibe dados do mês atual
+   - Alterne entre Esta Semana, Mês Atual, Mês Anterior ou Personalizado
+   - Veja horas trabalhadas, ganhos estimados e total de tasks
+
+4. **Exporte o relatório**:
+   - Clique em "Gerar Relatório" para abrir a tabela detalhada
+   - Use "Exportar CSV" para baixar o arquivo ou "Copiar Tabela" para colar em planilhas
 
 ## 🔒 Segurança
 
-- O token da API é armazenado apenas no localStorage do seu navegador
-- As requisições são feitas server-side através do PHP
-- Não há armazenamento permanente de dados sensíveis no servidor
+- O token da API é armazenado apenas no localStorage do navegador
+- As requisições são feitas server-side via PHP
+- Nenhum dado sensível é armazenado permanentemente no servidor
 
 ## 🐛 Solução de Problemas
 
@@ -65,18 +73,18 @@ Um sistema web para gerenciar tempo e calcular lucro mensal baseado no tempo gas
 
 ### "Método não permitido"
 - Certifique-se de que o servidor está configurado para executar PHP
-- Verifique se o arquivo api.php está acessível
+- Verifique se o arquivo `api.php` está acessível
 
 ### Dados não aparecem
-- Confirme se você tem time entries registrados no período selecionado
+- Confirme se há time entries registrados no período selecionado
 - Verifique se as tasks estão atribuídas a você no ClickUp
 
 ## 📊 Como Funciona
 
 1. **Frontend (HTML/JS)**: Interface do usuário e gerenciamento de estado
 2. **Backend (PHP)**: Comunicação segura com a API do ClickUp
-3. **API ClickUp**: Fonte dos dados de tempo e tasks
-4. **LocalStorage**: Armazenamento das configurações do usuário
+3. **API ClickUp v2**: Fonte dos dados de tempo, tasks e perfil do usuário
+4. **LocalStorage**: Armazenamento das configurações e cache do perfil
 
 ## 🤝 Contribuições
 
