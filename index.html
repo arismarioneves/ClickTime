@@ -896,17 +896,15 @@
 
             // Filename
             const today = new Date().toISOString().split('T')[0];
-            const periodNames = {
-                week:       'esta-semana',
-                month:      'mes-atual',
-                prev_month: 'mes-anterior',
-                custom: (() => {
-                    const s = document.getElementById('customStart')?.value || '';
-                    const e = document.getElementById('customEnd')?.value || '';
-                    return s && e ? `${s}_a_${e}` : 'personalizado';
-                })()
-            };
-            const filename = `clicktime-${periodNames[currentPeriod] || 'periodo'}-${today}.csv`;
+            let filename;
+            if (currentPeriod === 'custom') {
+                const s = document.getElementById('customStart')?.value || '';
+                const e = document.getElementById('customEnd')?.value || '';
+                filename = s && e ? `clicktime-personalizado-${s}_a_${e}.csv` : `clicktime-personalizado-${today}.csv`;
+            } else {
+                const periodNames = { week: 'esta-semana', month: 'mes-atual', prev_month: 'mes-anterior' };
+                filename = `clicktime-${periodNames[currentPeriod] || 'periodo'}-${today}.csv`;
+            }
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url  = URL.createObjectURL(blob);
