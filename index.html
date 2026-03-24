@@ -682,53 +682,58 @@
 
         // Atualizar lista de tasks
         function updateTasksList(tasks) {
-            currentTasks = tasks; // Armazenar tasks para reordenação
+            currentTasks = tasks;
             const tasksList = document.getElementById('tasksList');
 
-            if (tasks.length === 0) {
+            if (!tasks || tasks.length === 0) {
                 tasksList.innerHTML = `
-                    <div class="text-center py-12 text-gray-500">
-                        <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    <div class="text-center py-10 text-gray-400">
+                        <svg class="w-10 h-10 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <p>Nenhuma task encontrada no período selecionado.</p>
-                    </div>
-                `;
+                        <p class="text-sm">Nenhuma task encontrada no período selecionado.</p>
+                    </div>`;
                 return;
             }
 
-            // Ordenar tasks baseado na opção selecionada
-            let sortedTasks = [...tasks];
+            let sorted = [...tasks];
             if (currentSortOption === 'time') {
-                sortedTasks.sort((a, b) => b.time - a.time);
-            } else if (currentSortOption === 'date') {
-                sortedTasks.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+                sorted.sort((a, b) => b.time - a.time);
+            } else {
+                sorted.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
             }
 
-            // Mostrar todas as tasks (não apenas as top 10)
-            const tasksHtml = sortedTasks.map((task, index) => {
-                const formattedTime = formatTime(task.time);
-                const taskDate = task.date ? task.date.split('-').reverse().join('/') : 'Data não disponível';
+            const maxTime = Math.max(...sorted.map(t => t.time));
+
+            tasksList.innerHTML = sorted.map((task, i) => {
+                const date      = task.date ? task.date.split('-').reverse().join('/') : 'Data não disponível';
+                const time      = formatTime(task.time);
+                const value     = formatCurrency((task.time / 3600000) * hourlyRate);
+                const barWidth  = maxTime > 0 ? Math.round((task.time / maxTime) * 100) : 0;
+                const link      = task.id ? `<a href="https://app.clickup.com/t/${task.id}" target="_blank" rel="noopener noreferrer"
+                        class="text-gray-300 hover:text-purple-500 transition-colors ml-2 flex-shrink-0" title="Abrir no ClickUp">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg></a>` : '';
 
                 return `
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-3 hover:bg-gray-100 transition-colors">
-                        <div class="flex items-center flex-1">
-                            <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
-                                ${index + 1}
-                            </div>
-                            <div class="flex-1">
-                                <span class="font-medium text-gray-800 block">${task.name}</span>
-                                <span class="text-sm text-gray-500">${taskDate}</span>
+                    <div class="task-row flex items-center gap-3 px-1 py-3 border-b last:border-b-0" style="border-color:#faf8fd;">
+                        <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                            style="background:#f0ebfa;color:#4A3279;">${i + 1}</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium truncate" style="color:#2d1b69;">${task.name}</div>
+                            <div class="text-xs text-gray-400 mt-0.5">${date}</div>
+                        </div>
+                        <div class="w-24 flex-shrink-0 hidden sm:block">
+                            <div class="h-1 rounded-full" style="background:#f0ebfa;">
+                                <div class="h-1 rounded-full" style="background:#4A3279;width:${barWidth}%;"></div>
                             </div>
                         </div>
-                        <div class="flex items-center">
-                            <span class="text-primary font-bold text-lg">${formattedTime}</span>
-                        </div>
-                    </div>
-                `;
+                        <div class="text-sm font-bold flex-shrink-0" style="color:#4A3279;">${time}</div>
+                        <div class="text-xs font-medium flex-shrink-0 hidden sm:block" style="color:#6c4fa8;">${value}</div>
+                        ${link}
+                    </div>`;
             }).join('');
-
-            tasksList.innerHTML = tasksHtml;
         }
 
         // Mostrar loading
