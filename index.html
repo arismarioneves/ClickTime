@@ -816,9 +816,9 @@
                     <thead>
                         <tr>
                             <th>Data</th>
-                            <th>Projeto / Módulo</th>
-                            <th>Descrição da Atividade</th>
-                            <th>Horas Alocadas</th>
+                            <th>Projeto</th>
+                            <th>Atividade</th>
+                            <th>Horas</th>
                             <th>Status</th>
                             <th>Observações</th>
                         </tr>
@@ -889,7 +889,7 @@
                 return ma !== mb ? ma - mb : da - db;
             });
 
-            const header = ['Data', 'Descrição', 'Horas Alocadas', 'Valor (R$)', 'Status'];
+            const header = ['Data', 'Atividade', 'Horas', 'Valor (R$)', 'Status'];
             const csvContent = '\uFEFF' + [header, ...rows]
                 .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
                 .join('\r\n');
