@@ -498,33 +498,49 @@
         function setPeriod(period, targetElement = null) {
             currentPeriod = period;
 
-            // Atualizar botões ativos
             document.querySelectorAll('.period-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-primary', 'text-white');
-                btn.classList.add('text-gray-600', 'hover:text-primary');
+                btn.classList.remove('active');
+                btn.style.background = 'white';
+                btn.style.color = '#666';
+                btn.style.borderColor = '#e5e0f0';
+                btn.style.boxShadow = '';
             });
 
-            // Se não foi passado um elemento, encontrar pelo período
-            if (!targetElement) {
-                const periodMap = {
-                    'week': 'Esta Semana',
-                    'month': 'Este Mês',
-                    'prev_month': 'Mês Anterior'
-                };
-                targetElement = Array.from(document.querySelectorAll('.period-btn')).find(btn => {
-                    const btnText = btn.textContent.replace(/\s+/g, ' ').trim();
-                    return btnText === periodMap[period];
-                });
-            }
-
             if (targetElement) {
-                targetElement.classList.add('active', 'bg-primary', 'text-white');
-                targetElement.classList.remove('text-gray-600', 'hover:text-primary');
+                targetElement.classList.add('active');
+                targetElement.style.background = '#4A3279';
+                targetElement.style.color = 'white';
+                targetElement.style.borderColor = '#4A3279';
+                targetElement.style.boxShadow = '0 2px 8px rgba(74,50,121,0.35)';
             }
 
-            if (apiToken) {
-                loadTimeData();
+            // Show/hide custom date inputs
+            const customRange = document.getElementById('customDateRange');
+            if (period === 'custom') {
+                customRange.classList.remove('hidden');
+                customRange.classList.add('flex');
+                return; // Don't load data yet — wait for "Aplicar"
+            } else {
+                customRange.classList.add('hidden');
+                customRange.classList.remove('flex');
             }
+
+            if (apiToken) loadTimeData();
+        }
+
+        function applyCustomPeriod() {
+            const startVal = document.getElementById('customStart').value;
+            const endVal   = document.getElementById('customEnd').value;
+
+            if (!startVal || !endVal) {
+                showToast('Selecione as duas datas para o período personalizado.', 'error');
+                return;
+            }
+            if (new Date(startVal) > new Date(endVal)) {
+                showToast('A data inicial deve ser anterior à data final.', 'error');
+                return;
+            }
+            if (apiToken) loadTimeData();
         }
 
         // Carregar dados de tempo
@@ -625,6 +641,13 @@
 
                 startDate = startOfPrevMonth.getTime();
                 endDate = endOfPrevMonth.getTime();
+            } else if (currentPeriod === 'custom') {
+                const start = new Date(document.getElementById('customStart').value);
+                start.setHours(0, 0, 0, 0);
+                const end = new Date(document.getElementById('customEnd').value);
+                end.setHours(23, 59, 59, 999);
+                startDate = start.getTime();
+                endDate   = end.getTime();
             }
 
             return { startDate, endDate };
