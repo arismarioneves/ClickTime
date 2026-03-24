@@ -161,52 +161,47 @@
         </div>
 
         <!-- Dashboard Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
             <!-- Hours Card -->
-            <div class="bg-white rounded-2xl p-8 shadow-xl hover-lift transition-all duration-300">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-700">Horas Trabalhadas</h3>
-                    <div class="p-3 bg-blue-100 rounded-full">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <div class="bg-white rounded-xl p-6 shadow-sm hover-lift transition-all duration-300" style="border-top:3px solid #4A3279;">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Horas Trabalhadas</span>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#f0ebfa;">
+                        <svg class="w-4 h-4" style="color:#4A3279;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
                 </div>
-                <div class="text-3xl font-bold text-primary mb-2" id="totalHours">--</div>
-                <p class="text-gray-500 text-sm">no período selecionado</p>
+                <div class="text-2xl font-bold mb-1" id="totalHours" style="color:#2d1b69;">--</div>
+                <p class="text-xs text-gray-400">no período selecionado</p>
             </div>
 
             <!-- Earnings Card -->
-            <div class="bg-white rounded-2xl p-8 shadow-xl hover-lift transition-all duration-300">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-700">Saldo em R$</h3>
-                    <div class="p-3 bg-green-100 rounded-full">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1">
-                            </path>
+            <div class="bg-white rounded-xl p-6 shadow-sm hover-lift transition-all duration-300" style="border-top:3px solid #6c4fa8;">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Saldo em R$</span>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#eafaf1;">
+                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                         </svg>
                     </div>
                 </div>
-                <div class="text-3xl font-bold text-green-600 mb-2" id="totalEarnings">R$ --</div>
-                <p class="text-gray-500 text-sm">baseado no tempo trabalhado</p>
+                <div class="text-2xl font-bold text-green-600 mb-1" id="totalEarnings">R$ --</div>
+                <p class="text-xs text-gray-400">baseado no tempo trabalhado</p>
             </div>
 
             <!-- Tasks Card -->
-            <div class="bg-white rounded-2xl p-8 shadow-xl hover-lift transition-all duration-300">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-700">Tasks Concluídas</h3>
-                    <div class="p-3 bg-purple-100 rounded-full">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
-                            </path>
+            <div class="bg-white rounded-xl p-6 shadow-sm hover-lift transition-all duration-300" style="border-top:3px solid #9b7fd4;">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Tasks Concluídas</span>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#eaf2fb;">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                         </svg>
                     </div>
                 </div>
-                <div class="text-3xl font-bold text-purple-600 mb-2" id="totalTasks">--</div>
-                <p class="text-gray-500 text-sm">no período selecionado</p>
+                <div class="text-2xl font-bold mb-1" id="totalTasks" style="color:#6c4fa8;">--</div>
+                <p class="text-xs text-gray-400">no período selecionado</p>
             </div>
         </div>
 
