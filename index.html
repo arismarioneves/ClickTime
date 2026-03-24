@@ -354,6 +354,14 @@
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">Relatório de Atividades</h2>
                     <div class="flex items-center space-x-3">
+                        <button onclick="exportCSV()"
+                            class="flex items-center space-x-2 text-white px-4 py-2 rounded-lg transition-all text-sm font-medium"
+                            style="background:#6c4fa8;">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                            </svg>
+                            <span>Exportar CSV</span>
+                        </button>
                         <button onclick="copyReportTable()"
                             class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-all text-sm font-medium">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -849,6 +857,63 @@
         function closeReportModal() {
             document.getElementById('reportModal').classList.add('hidden');
             document.getElementById('reportModal').classList.remove('flex');
+        }
+
+        function exportCSV() {
+            if (!currentTasks || currentTasks.length === 0) {
+                showToast('Nenhuma task disponível para exportar.', 'error');
+                return;
+            }
+
+            // Derive status the same way generateReport() does
+            const taskGroups = {};
+            const sorted = [...currentTasks].sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+            sorted.forEach(task => {
+                if (!taskGroups[task.name]) taskGroups[task.name] = [];
+                taskGroups[task.name].push(task);
+            });
+
+            const rows = [];
+            Object.values(taskGroups).forEach(group => {
+                group.forEach((task, idx) => {
+                    const status = idx === group.length - 1 ? 'Concluído' : 'Em andamento';
+                    const date   = task.date ? task.date.split('-').reverse().join('/').substring(0, 5) : '--/--';
+                    const hours  = formatTime(task.time);
+                    const value  = formatCurrency((task.time / 3600000) * hourlyRate);
+                    rows.push([date, task.name, hours, value, status]);
+                });
+            });
+            rows.sort((a, b) => {
+                const [da, ma] = a[0].split('/').map(Number);
+                const [db, mb] = b[0].split('/').map(Number);
+                return ma !== mb ? ma - mb : da - db;
+            });
+
+            const header = ['Data', 'Descrição', 'Horas Alocadas', 'Valor (R$)', 'Status'];
+            const csvContent = '\uFEFF' + [header, ...rows]
+                .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+                .join('\r\n');
+
+            // Filename
+            const today = new Date().toISOString().split('T')[0];
+            const periodNames = {
+                week:       'esta-semana',
+                month:      'mes-atual',
+                prev_month: 'mes-anterior',
+                custom: (() => {
+                    const s = document.getElementById('customStart')?.value || '';
+                    const e = document.getElementById('customEnd')?.value || '';
+                    return s && e ? `${s}_a_${e}` : 'personalizado';
+                })()
+            };
+            const filename = `clicktime-${periodNames[currentPeriod] || 'periodo'}-${today}.csv`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href = url; a.download = filename; a.click();
+            URL.revokeObjectURL(url);
+            showToast('CSV exportado com sucesso!', 'success');
         }
 
         // Copiar tabela para clipboard
